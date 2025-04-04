@@ -1,0 +1,11 @@
+Thank you for your thoughtful and well-structured proposal — addressing rainfall prediction and drought forecasting using AI has tremendous relevance for sustainable development, particularly in regions vulnerable to climate variability. Your alignment with SDGs 2, 6, and 13 is well-justified, and the project's potential to support agricultural planning and water resource optimization makes it highly impactful. The combination of satellite and ground-based weather data is a strong foundation, and your approach to compare both ML and DL models shows critical thinking around model suitability.
+
+To make your project more novel and scalable, consider integrating remote sensing vegetation indices (e.g., NDVI or EVI from MODIS or Landsat) as additional input features — these can improve drought detection by reflecting actual crop and soil conditions. You could also explore spatial-temporal fusion models (e.g., ConvLSTM or attention-based LSTM networks) to better leverage the geospatial aspect of satellite imagery alongside time-series trends. Additionally, using climate anomaly indicators like El Niño–Southern Oscillation (ENSO) indices could boost long-term forecasting accuracy. For further benchmarking or model generalization, you may look into:
+
+    CHIRPS (Climate Hazards Group InfraRed Precipitation with Station data)
+
+    ERA5 reanalysis datasets (by ECMWF)
+
+    Google Earth Engine for real-time satellite integration
+
+Finally, building a dashboard interface or farmer-friendly mobile alert system could be a strong step toward real-world deployment and community-level climate adaptation support.
