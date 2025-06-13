@@ -13,7 +13,7 @@ app = Flask(__name__)
 with open('models/model_rf.pkl', 'rb') as f:
     model_rf = pickle.load(f)
 with open('models/scaler.pkl', 'rb') as f:
-    sc = joblib.load('../models/scaler.pkl') 
+    sc = joblib.load('models/scaler.pkl') 
 
 # Feature columns (MUST match training data)
 feature_cols = ['day', 'pressure', 'maxtemp', 'temparature', 'mintemp', 'dewpoint',
