@@ -10,9 +10,9 @@ from flask import Flask, jsonify, request
 app = Flask(__name__)
 
 # Load model and scaler
-with open('../models/model_rf.pkl', 'rb') as f:
+with open('models/model_rf.pkl', 'rb') as f:
     model_rf = pickle.load(f)
-with open('../models/scaler.pkl', 'rb') as f:
+with open('models/scaler.pkl', 'rb') as f:
     sc = joblib.load('../models/scaler.pkl') 
 
 # Feature columns (MUST match training data)
