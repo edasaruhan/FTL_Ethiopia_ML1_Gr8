@@ -90,7 +90,7 @@ def predict():
             "city": city,
             "country": country,
             "date": date,
-            "rainfall_probability": round(proba, 4),
+            "rainfall_probability": round(proba * 100, 2),
             "prediction": prediction
         })
     
