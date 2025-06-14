@@ -6,8 +6,10 @@ import numpy as np
 import pandas as pd
 import requests
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # Load model and scaler
 with open('models/model_rf.pkl', 'rb') as f:
@@ -97,3 +99,4 @@ def predict():
 
 if __name__ == '__main__':
     app.run(debug=True)
+    
