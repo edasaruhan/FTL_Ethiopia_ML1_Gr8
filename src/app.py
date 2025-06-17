@@ -23,13 +23,24 @@ feature_cols = ['day', 'pressure', 'maxtemp', 'temparature', 'mintemp', 'dewpoin
 
 API_KEY = "42f07f9873614afa9ca180923251206"
 
-ethiopian_crops = {
-    "teff": (40, 70),
-    "coffee": (60, 90),
-    "maize": (50, 80),
-    "sorghum": (30, 70),
-    "wheat": (40, 75),
-    "barley": (35, 65)
+ethiopian_crops = ["teff", "coffee", "maize", "sorghum", "wheat", "barley"]
+
+low_rainfall_msgs = {
+    "teff": "Teff may suffer from poor germination or stunted growth. Consider supplemental irrigation.",
+    "coffee": "Coffee plants may show leaf drop or reduced flowering. Use mulch to retain soil moisture.",
+    "maize": "Maize yield may be reduced due to water stress. Consider early irrigation.",
+    "sorghum": "Sorghum is drought-resistant but still needs sufficient moisture. Monitor soil conditions.",
+    "wheat": "Wheat may not tiller properly under dry conditions. Irrigation may be necessary.",
+    "barley": "Barley is sensitive to drought during early stages. Irrigate if possible."
+}
+
+excess_rainfall_msgs = {
+    "teff": "Teff may lodge or rot due to waterlogging. Use raised beds or improve drainage.",
+    "coffee": "Coffee is vulnerable to fungal diseases. Ensure good aeration and avoid wet feet.",
+    "maize": "Maize may lodge or suffer root rot. Avoid overwatering and manage drainage.",
+    "sorghum": "Sorghum tolerates dry better than wet. Ensure fields are well-drained.",
+    "wheat": "Excess rain can delay wheat harvest and increase disease. Monitor field moisture.",
+    "barley": "Barley dislikes excessive moisture. Risk of fungal infection is high."
 }
 
 def get_day_of_year(date_str):
@@ -88,21 +99,16 @@ def predict():
 
         proba = model_rf.predict_proba(input_scaled)[0, 1]
         prediction = "Rain" if proba >= 0.5 else "No Rain"
-
-        # Approximate rainfall in mm for advisory logic
-        estimated_rainfall = proba * 20  # adjust this factor as needed
+        rain_percent = proba * 100
 
         advisories = []
-        for crop, (low_thresh, high_thresh) in ethiopian_crops.items():
-            if estimated_rainfall < low_thresh * (1/90):
-                msg = (f"⚠️ Low rainfall expected. For {crop}, which typically needs {low_thresh}-{high_thresh} mm over the growing season, "
-                       f"this may lead to water stress and reduced yield. Supplemental irrigation is highly recommended to support early growth.")
-            elif estimated_rainfall > high_thresh * (1/90):
-                msg = (f"⚠️ Excess rainfall expected. {crop} may suffer from root diseases or lodging due to oversaturation. "
-                       f"Consider implementing drainage or raised beds to minimize waterlogging.")
+        for crop in ethiopian_crops:
+            if rain_percent < 40:
+                msg = f"⚠️ Low rainfall expected. {low_rainfall_msgs[crop]}"
+            elif rain_percent > 70:
+                msg = f"⚠️ Excess rainfall expected. {excess_rainfall_msgs[crop]}"
             else:
-                msg = (f"✅ Rainfall is within the ideal range for {crop}. Current conditions support healthy germination and vegetative growth. "
-                       f"Maintain standard agronomic practices for optimal yield.")
+                msg = f"✅ Rainfall conditions appear suitable for {crop}. Proceed with standard practices."
             advisories.append({"crop": crop, "advisory": msg})
 
         return jsonify({
