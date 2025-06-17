@@ -43,7 +43,7 @@ def fetch_weather_data(city, country, date):
     data = response.json()
     forecast = data['forecast']['forecastday'][0]['day']
     hour_data = data['forecast']['forecastday'][0]['hour'][12]  # Noon
-    
+
     feature_values = []
     for col in feature_cols:
         if col == 'day':
@@ -74,20 +74,6 @@ def fetch_weather_data(city, country, date):
         feature_values.append(float(value))
     return feature_values
 
-def crop_advisory(crop, rainfall_probability):
-    if crop not in ethiopian_crops:
-        return "No advisory available for the selected crop."
-
-    low, high = ethiopian_crops[crop]
-    rain_percent = rainfall_probability * 100
-
-    if rain_percent < low:
-        return f"⚠️ Low rainfall expected. Irrigation recommended for {crop}."
-    elif rain_percent > high:
-        return f"⚠️ Excess rainfall predicted. Consider drainage or delay planting {crop}."
-    else:
-        return f"✅ Rainfall conditions are suitable for {crop}."
-
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
@@ -95,7 +81,6 @@ def predict():
         city = data['city']
         country = data['country']
         date = data.get('date', (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d'))
-        crop = data.get('crop', 'maize')
 
         features = fetch_weather_data(city, country, date)
         input_data = pd.DataFrame([features], columns=feature_cols)
@@ -103,7 +88,22 @@ def predict():
 
         proba = model_rf.predict_proba(input_scaled)[0, 1]
         prediction = "Rain" if proba >= 0.5 else "No Rain"
-        advisory = crop_advisory(crop, proba)
+
+        # Approximate rainfall in mm for advisory logic
+        estimated_rainfall = proba * 20  # adjust this factor as needed
+
+        advisories = []
+        for crop, (low_thresh, high_thresh) in ethiopian_crops.items():
+            if estimated_rainfall < low_thresh * (1/90):
+                msg = (f"⚠️ Low rainfall expected. For {crop}, which typically needs {low_thresh}-{high_thresh} mm over the growing season, "
+                       f"this may lead to water stress and reduced yield. Supplemental irrigation is highly recommended to support early growth.")
+            elif estimated_rainfall > high_thresh * (1/90):
+                msg = (f"⚠️ Excess rainfall expected. {crop} may suffer from root diseases or lodging due to oversaturation. "
+                       f"Consider implementing drainage or raised beds to minimize waterlogging.")
+            else:
+                msg = (f"✅ Rainfall is within the ideal range for {crop}. Current conditions support healthy germination and vegetative growth. "
+                       f"Maintain standard agronomic practices for optimal yield.")
+            advisories.append({"crop": crop, "advisory": msg})
 
         return jsonify({
             "city": city,
@@ -111,8 +111,7 @@ def predict():
             "date": date,
             "rainfall_probability": round(proba, 2),
             "prediction": prediction,
-            "advisory": advisory,
-            "crop": crop
+            "advisories": advisories
         })
 
     except Exception as e:
