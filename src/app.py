@@ -83,7 +83,9 @@ def fetch_weather_data(city, country, date):
         elif col == 'windspeed':
             value = hour_data.get('wind_kph', 10.0)
         feature_values.append(float(value))
-    return feature_values
+
+    total_precip_mm = forecast.get('totalprecip_mm', 0.0)  # Real rainfall in mm
+    return feature_values, total_precip_mm
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -93,7 +95,7 @@ def predict():
         country = data['country']
         date = data.get('date', (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d'))
 
-        features = fetch_weather_data(city, country, date)
+        features, total_precip_mm = fetch_weather_data(city, country, date)
         input_data = pd.DataFrame([features], columns=feature_cols)
         input_scaled = sc.transform(input_data)
 
@@ -103,10 +105,10 @@ def predict():
 
         advisories = []
         for crop in ethiopian_crops:
-            if rain_percent < 40:
-                msg = f"⚠️ Low rainfall expected. {low_rainfall_msgs[crop]}"
-            elif rain_percent > 70:
-                msg = f"⚠️ Excess rainfall expected. {excess_rainfall_msgs[crop]}"
+            if total_precip_mm < 1:
+                msg = f"⚠️ Very low rainfall predicted. {low_rainfall_msgs[crop]}"
+            elif total_precip_mm > 20:
+                msg = f"🚨 Heavy rainfall expected. {excess_rainfall_msgs[crop]}"
             else:
                 msg = f"✅ Rainfall conditions appear suitable for {crop}. Proceed with standard practices."
             advisories.append({"crop": crop, "advisory": msg})
@@ -117,6 +119,7 @@ def predict():
             "date": date,
             "rainfall_probability": round(proba, 2),
             "prediction": prediction,
+            "total_precip_mm": round(total_precip_mm, 2),
             "advisories": advisories
         })
 
